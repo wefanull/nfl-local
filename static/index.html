@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFL local</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script src="/static/chart.umd.min.js"></script>
+<script src="/static/marked.min.js"></script>
+<script src="/static/purify.min.js"></script>
+<style>
+:root{--turf:#0e2a21;--panel:#143528;--chalk:#eef1e6;--mute:#8fa89a;--line:#244a39;--home:#f5c518;--away:#7dd3c0;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--turf);color:var(--chalk);font:15px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+.cond,h1,h2,.teams,.big{font-family:"Barlow Condensed","Arial Narrow",sans-serif}
+header,main{max-width:1100px;margin:auto;padding:0 clamp(16px,4vw,32px)}
+header{padding-top:32px}
+h1{margin:0;font-size:40px;font-weight:700;letter-spacing:.01em;line-height:1}
+.sub{color:var(--mute);margin:6px 0 0}
+main{padding-bottom:56px;padding-top:20px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--home);outline-offset:2px}
+.row{display:grid;grid-template-columns:64px 1.1fr 1fr 1.3fr;gap:16px;align-items:center;width:100%;text-align:left;padding:14px 8px;border-bottom:1px solid var(--line)}
+.row:hover{background:var(--panel)}
+.when{font-weight:500}.when small,.line small{display:block;color:var(--mute);font-size:13px}
+.teams{font-size:26px;font-weight:700;display:flex;gap:10px;align-items:baseline}
+.teams i{font-style:normal;color:var(--mute);font-size:18px;font-weight:500}
+.field{position:relative;display:flex;height:14px;border-radius:2px;overflow:hidden}
+.field::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(14,42,33,.6) calc(10% - 1px) 10%)}
+.field span{display:block;height:100%}
+.flabels{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:3px}
+.back{color:var(--home);padding:6px 0;margin-bottom:8px}
+h2{font-size:22px;margin:32px 0 10px;font-weight:700}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:end}
+.big{font-size:54px;font-weight:700;line-height:1}.big i{font-style:normal;color:var(--mute);font-size:30px;margin:0 10px}
+.market{background:var(--panel);padding:18px 20px;border-left:4px solid var(--home);margin-top:14px}
+.market .field{height:22px;margin:10px 0 2px}
+.ctx{color:var(--mute);margin:10px 0 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.chart{height:230px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:7px 10px;border-bottom:1px solid var(--line);text-align:center}
+td:nth-child(2){color:var(--mute);text-align:center;font-size:14px}
+th{font-weight:500;color:var(--mute)}
+ul{margin:0;padding-left:18px}li{margin:3px 0}
+.note{color:var(--mute);font-size:13px;margin-top:32px;max-width:70ch}
+.logo{width:28px;height:28px;object-fit:contain;margin-right:8px}.big .logo{width:56px;height:56px}
+.tm{display:inline-flex;align-items:center}
+.fab{position:fixed;right:20px;bottom:20px;background:var(--home);color:var(--turf);font-weight:500;padding:12px 20px;border-radius:999px}
+.chat{position:fixed;right:20px;bottom:76px;width:min(560px,calc(100vw - 32px));height:min(560px,calc(100vh - 110px));background:var(--panel);border:1px solid var(--line);display:none;flex-direction:column}
+.chat.open{display:flex}
+.msgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{padding:8px 12px;max-width:94%;overflow-wrap:anywhere}.m.u{white-space:pre-wrap}
+.m.u{align-self:flex-end;background:var(--home);color:var(--turf)}.m.a{background:var(--turf)}
+.m small{display:block;color:var(--mute);margin-top:4px}
+.md>:first-child{margin-top:0}.md>:last-child{margin-bottom:0}
+.md p,.md ul,.md ol{margin:.5em 0}.md ul,.md ol{padding-left:1.3em}
+.md h1,.md h2,.md h3{font-family:"Barlow Condensed",sans-serif;font-size:19px;margin:.8em 0 .3em}
+.md table{display:block;width:max-content;max-width:100%;overflow-x:auto;border-collapse:collapse;margin:.6em 0}
+.md th,.md td{border:1px solid var(--line);padding:5px 9px;text-align:left;font-size:13.5px;color:var(--chalk)}
+.md th{background:var(--panel);font-weight:500}.md tr:nth-child(even) td{background:rgba(255,255,255,.04)}
+.md code{background:var(--panel);padding:1px 5px;font-size:13px}
+.md pre{background:var(--panel);padding:10px;overflow-x:auto}.md pre code{padding:0}
+.md blockquote{margin:.6em 0;padding-left:12px;border-left:3px solid var(--home);color:var(--mute)}
+.chat form{display:flex;border-top:1px solid var(--line)}
+.chat input{flex:1;background:none;border:0;color:inherit;font:inherit;padding:12px}
+.chat form button{padding:0 16px;color:var(--home)}
+@media(max-width:760px){.row{grid-template-columns:52px 1fr;row-gap:8px}.fieldcol{grid-column:1/-1}.two{grid-template-columns:1fr}.big{font-size:40px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>NFL local</h1>
+  <p class="sub">Estadísticas para que tú decidas. Datos de nflverse, calculados en tu equipo.</p>
+</header>
+<main id="view"></main>
+<button class="fab" onclick="toggleChat()">Preguntar al modelo</button>
+<section class="chat" id="chat" aria-label="Chat con el modelo local">
+  <div class="msgs" id="msgs"><div class="m a">Pregúntame por estadísticas: forma reciente, líneas o comparaciones. Yo te doy los datos; la decisión es tuya.</div></div>
+  <form onsubmit="send(event)"><input id="q" placeholder="Ej.: ¿Cómo viene KC contra el spread?" autocomplete="off" aria-label="Pregunta"><button>Enviar</button></form>
+</section>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "—").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ml = v => v == null ? "—" : (v > 0 ? "+" : "") + v;
+const pct = p => Math.round(p * 100) + "%";
+const fav = g => g.spread_line == null ? "Sin línea" : g.spread_line == 0 ? "Pick'em" : `${g.spread_line > 0 ? g.home_team : g.away_team} −${Math.abs(g.spread_line)}`;
+let charts = [], TEAMS = {}, currentGame = null, chatLog = [];
+const logo = t => TEAMS[t]?.logo ? `<img class="logo" src="${esc(TEAMS[t].logo)}" alt="" loading="lazy" onerror="this.remove()">` : "";
+Chart.defaults.color = "#8fa89a"; Chart.defaults.borderColor = "rgba(238,241,230,.08)"; Chart.defaults.font.family = "IBM Plex Sans, system-ui, sans-serif";
+
+function field(g) {
+  const h = g.market_home_prob; if (h == null) return "";
+  return `<div class="field" role="img" aria-label="Probabilidad del mercado: ${esc(g.away_team)} ${pct(1-h)}, ${esc(g.home_team)} ${pct(h)}">
+    <span style="width:${(1-h)*100}%;background:var(--away)"></span><span style="width:${h*100}%;background:var(--home)"></span></div>
+    <div class="flabels"><span>${esc(g.away_team)} ${pct(1-h)}</span><span>${esc(g.home_team)} ${pct(h)}</span></div>`;
+}
+
+async function showWeek() {
+  currentGame = null;
+  charts.forEach(c => c.destroy()); charts = [];
+  $("#view").innerHTML = '<p class="sub">Cargando…</p>';
+  let games;
+  try {
+    const res = await fetch("/api/week");
+    if (!res.ok) throw new Error(res.status);
+    games = await res.json();
+  } catch {
+    $("#view").innerHTML = '<p class="sub">No se pudieron cargar los juegos. ¿Está corriendo <code>uvicorn</code> y existe <code>nfl.duckdb</code>?</p>';
+    return;
+  }
+  $("#view").innerHTML = games.length ? games.map(g => `
+    <button class="row" data-game="${esc(g.game_id)}">
+      <span class="when">${esc(g.gameday.slice(5))}<small>semana ${g.week}</small></span>
+      <span class="teams"><b class="tm">${logo(g.away_team)}${esc(g.away_team)}</b><i>@</i><b class="tm">${logo(g.home_team)}${esc(g.home_team)}</b></span>
+      <span class="line">${fav(g)}<small>total ${g.total_line ?? "—"}</small></span>
+      <span class="fieldcol">${field(g)}</span>
+    </button>`).join("")
+    : '<p class="sub">No hay juegos por jugar con línea. Corre <code>python fetch_data.py</code> para actualizar.</p>';
+  // Delegacion en vez de onclick en linea: el game_id nunca se interpola dentro de codigo JS.
+  $("#view").querySelectorAll("[data-game]").forEach(b => b.addEventListener("click", () => showGame(b.dataset.game)));
+}
+
+async function showGame(id) {
+  currentGame = id;
+  charts.forEach(c => c.destroy()); charts = [];
+  $("#view").innerHTML = '<p class="sub">Cargando…</p>';
+  const res = await fetch(`/api/game/${encodeURIComponent(id)}?last_n=5`);
+  if (!res.ok) { $("#view").innerHTML = '<p class="sub">No se pudo cargar el juego.</p>'; return; }
+  const d = await res.json(), g = d.game, [a, h] = [g.away_team, g.home_team];
+  const A = d.teams[a].summary, H = d.teams[h].summary;
+  const ctx = [`Descanso: ${esc(a)} ${g.away_rest ?? "—"} días, ${esc(h)} ${g.home_rest ?? "—"} días`,
+    g.roof ? `Estadio: ${esc(g.roof)}` : "", g.home_qb_name ? `QB listados: ${esc(h)} ${esc(g.home_qb_name)}, ${esc(a)} ${esc(g.away_qb_name)} (confirma lesiones aparte)` : ""].filter(Boolean);
+  const rows = [["Récord", s => `${s.wins}-${s.n - s.wins - s.ties}` + (s.ties ? `-${s.ties}` : "")], ["Contra el spread", s => `${s.ats[0]}-${s.ats[1]}`],
+    ["Over / under", s => `${s.ou[0]} / ${s.ou[1]}`], ["Puntos a favor", s => s.points_for], ["Puntos en contra", s => s.points_against],
+    ["Yardas totales", s => s.total_yards], ["EPA de pase", s => s.pass_epa], ["EPA de carrera", s => s.rush_epa], ["Entregas perdidas", s => s.turnovers]];
+  const mixed = [a, h].some(t => new Set(d.teams[t].games.map(x => x.season)).size > 1);
+  $("#view").innerHTML = `
+    <button class="back" onclick="showWeek()">← Todos los juegos</button>
+    <div class="head"><div class="big"><span class="tm">${logo(a)}${esc(a)}</span><i>@</i><span class="tm">${logo(h)}${esc(h)}</span></div><div class="sub">${esc(g.gameday)} · semana ${g.week}</div></div>
+    <div class="market">
+      <div>${fav(g)} · total ${g.total_line ?? "—"} · moneyline ${esc(h)} ${ml(g.home_moneyline)}, ${esc(a)} ${ml(g.away_moneyline)}</div>
+      ${field(g)}<div class="ctx">Probabilidad de victoria según el mercado, sin el margen de la casa.</div>
+    </div>
+    <p class="ctx">${ctx.join(". ")}.</p>
+    <h2>Últimos ${H.n} juegos de cada equipo</h2>
+    <div class="two">${[a, h].map((t, i) => `<div><div class="sub">${esc(t)}: puntos anotados y permitidos</div><div class="chart"><canvas id="c${i}"></canvas></div></div>`).join("")}</div>
+    <h2>Comparación</h2>
+    <table><tr><th>${esc(a)}</th><th></th><th>${esc(h)}</th></tr>
+      ${rows.map(([l, f]) => `<tr><td>${esc(f(A))}</td><td>${l}</td><td>${esc(f(H))}</td></tr>`).join("")}</table>
+    <h2>Contexto histórico</h2>
+    <ul>
+      ${d.base.fav_cover ? `<li>Favoritos con spread parecido (±1.5) cubrieron ${pct(d.base.fav_cover.rate)} (${d.base.fav_cover.n} juegos).</li>` : ""}
+      ${d.base.over ? `<li>Juegos con total parecido (±3) pasaron el over ${pct(d.base.over.rate)} (${d.base.over.n} juegos).</li>` : ""}
+      ${d.h2h.map(x => `<li>${esc(x.gameday)}: ${esc(x.away_team)} ${x.away_score} @ ${esc(x.home_team)} ${x.home_score}</li>`).join("")}
+    </ul>
+    <p class="note">Son datos descriptivos con muestras chicas${mixed ? " (incluyen juegos de la temporada pasada)" : ""}; diferencias pequeñas frente a 50% suelen ser ruido.
+    La línea del mercado ya incorpora gran parte de esta información. La decisión es tuya.</p>`;
+  [a, h].forEach((t, i) => {
+    const gs = d.teams[t].games;
+    charts.push(new Chart($(`#c${i}`), {
+      type: "bar",
+      data: { labels: gs.map(x => (x.is_home ? "" : "@") + x.opponent),
+        datasets: [{ label: "Anotó", data: gs.map(x => x.points_for), backgroundColor: i ? "#f5c518" : "#7dd3c0" },
+                   { label: "Permitió", data: gs.map(x => x.points_against), backgroundColor: "rgba(238,241,230,.3)" }] },
+      options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+    }));
+  });
+}
+const toggleChat = () => { $("#chat").classList.toggle("open"); $("#q").focus(); };
+const md = text => window.marked && window.DOMPurify ? DOMPurify.sanitize(marked.parse(text, { breaks: true })) : null;
+function addMsg(cls, text, tools) {
+  const el = document.createElement("div"); el.className = "m " + cls;
+  const html = cls === "a" ? md(text) : null;
+  if (html) { el.classList.add("md"); el.innerHTML = html; } else el.textContent = text;
+  if (tools?.length) { const s = document.createElement("small"); s.textContent = "Consultó: " + [...new Set(tools)].join(", "); el.append(s); }
+  $("#msgs").append(el); $("#msgs").scrollTop = 1e9; return el;
+}
+async function send(e) {
+  e.preventDefault();
+  const input = $("#q"), question = input.value.trim(); if (!question) return;
+  input.value = ""; addMsg("u", question);
+  const wait = addMsg("a", "Consultando los datos…");
+  try {
+    const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history: chatLog, game_id: currentGame }) });
+    const d = await r.json(); wait.remove();
+    if (!r.ok) return addMsg("a", d.detail || "Error al consultar el modelo.");
+    addMsg("a", d.reply, d.tools);
+    chatLog.push({ role: "user", content: question }, { role: "assistant", content: d.reply });
+  } catch { wait.remove(); addMsg("a", "No pude conectar con el servidor."); }
+}
+fetch("/api/teams").then(r => r.ok ? r.json() : {}).then(t => TEAMS = t).catch(() => {}).finally(showWeek);
+</script>
+</body>
+</html>

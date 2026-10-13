@@ -1,0 +1,8 @@
+# Dependencias SOLO para desarrollar y verificar el proyecto: no hacen falta para usar la app.
+#
+#   .venv\Scripts\Activate.ps1
+#   pip install -r requirements-dev.txt
+#   mypy .
+#
+# mypy no esta en requirements.txt a proposito: la app funciona sin el.
+mypy==2.4.0
