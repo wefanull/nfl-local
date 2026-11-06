@@ -2,7 +2,7 @@
 
 # NFL Local
 
-**A local NFL stats analyst. Real data, a local LLM, zero made-up numbers.**
+**A local NFL stats analyst. Real data, a local LLM, and numbers you can trace to a tool call.**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![DuckDB](https://img.shields.io/badge/DuckDB-1.5-FFF000?logo=duckdb&logoColor=black)](https://duckdb.org/)
@@ -22,7 +22,7 @@ dashboard with a report for each game.
 
 > [!IMPORTANT]
 > **The model gives you statistics so _you_ can decide.** It doesn't bet, doesn't pick sides and never calls
-> anything a "lock". Every number comes from your database, not from the model's imagination.
+> anything a "lock". Numbers are meant to come from tool output, and every tool call is printed so you can verify them. Small models can still misquote or make things up.
 
 ## Features
 
